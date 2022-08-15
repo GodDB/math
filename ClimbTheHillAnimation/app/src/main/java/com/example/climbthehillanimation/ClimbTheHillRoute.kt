@@ -8,6 +8,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -16,6 +17,8 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.climbthehillanimation.ui.theme.ClimbTheHillAnimationTheme
 
@@ -50,32 +53,63 @@ private fun ClimbTheHillRenderer(
     state: ClimbTheHillState
 ) {
     Canvas(modifier = modifier) {
-        drawHills(state.hills, Paint().apply {
-            isAntiAlias = true
-            strokeWidth = 10f
-            style = PaintingStyle.Stroke
-            color = Color.Black
-        })
+        drawHills(state.hills)
+        drawClimber(state.climbers)
     }
 }
 
+private val path = Path()
 
-private fun DrawScope.drawHills(hills: List<Hill>, paint: Paint) {
-    val path = Path()
+private fun DrawScope.drawHills(hills: List<Hill>) {
+    path.reset()
     hills.forEach { hill ->
-        var prevPoint = hill.points[0]
-        drawRect(Color.Green, Offset(prevPoint.x.toFloat(), prevPoint.y.toFloat()), size = Size(50f, 50f))
-        for (i in 1 until hill.points.size) {
-            val curPoint = hill.points[i]
-            val midPoint = Point((prevPoint.x + curPoint.x) / 2, (prevPoint.y + curPoint.y) / 2)
-            path.quadraticBezierTo(prevPoint.x.toFloat(), prevPoint.y.toFloat(), midPoint.x.toFloat(), midPoint.y.toFloat())
-            this.drawContext.canvas.drawPath(path, paint)
-            drawRect(Color.Green, Offset(curPoint.x.toFloat(), curPoint.y.toFloat()), size = Size(50f, 50f)) //원래 포인트 그린
-            drawRect(Color.Blue, Offset(midPoint.x.toFloat(), midPoint.y.toFloat()), size = Size(50f, 50f)) // 보간 처리된 블루
-            prevPoint = curPoint
+        hill.points.forEach {
+            drawRect(it)
+            drawBezierCurve(it, path)
         }
-
     }
+}
+
+private fun DrawScope.drawClimber(climbers : List<Climber>) {
+    climbers.forEach {
+        drawRect(
+            color = Color.Green,
+            topLeft = Offset(it.x.toFloat(), it.y.toFloat()),
+            size = Size(50f, 50f)
+        )
+    }
+}
+
+private fun DrawScope.drawBezierCurve(
+    bezierPoint: BezierPoint,
+    path: Path
+) {
+    path.moveTo(bezierPoint.p0.x.toFloat(), bezierPoint.p0.y.toFloat())
+    path.quadraticBezierTo(
+        x1 = bezierPoint.p1.x.toFloat(),
+        y1 = bezierPoint.p1.y.toFloat(),
+        x2 = bezierPoint.p2.x.toFloat(),
+        y2 = bezierPoint.p2.y.toFloat()
+    )
+    drawPath(
+        path = path,
+        color = Color.Green,
+        style = Stroke(width = 10f)
+    )
+}
+
+private fun DrawScope.drawRect(bezierPoint: BezierPoint) {
+    drawRectInner(bezierPoint.p0)
+    drawRectInner(bezierPoint.p1)
+    drawRectInner(bezierPoint.p2)
+}
+
+private fun DrawScope.drawRectInner(point: Point) {
+    drawRect(
+        color = Color.Green,
+        topLeft = Offset(point.x.toFloat(), point.y.toFloat()),
+        size = Size(50f, 50f)
+    )
 }
 
 
