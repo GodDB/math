@@ -2,7 +2,6 @@ package com.example.climbthehillanimation
 
 import android.graphics.Point
 import android.util.Log
-import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
@@ -13,7 +12,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.max
+import kotlin.math.abs
+import kotlin.math.atan
+import kotlin.math.atan2
 
 class ClimbTheHillViewModel : ViewModel() {
 
@@ -50,12 +51,24 @@ class ClimbTheHillViewModel : ViewModel() {
             delay(10)
             time += 0.01f
             climberFlow.update {
-                it.map { it.update(time) }
-                    .filterNotNull()
+                val cur = it
+                val new = it.map { it.update(time) }
+                doubleMap(cur, new) { curItem, newItem ->
+                    if (curItem != null && newItem != null) {
+                        val dx = (newItem.x - curItem.x).toDouble()
+                        val dy = (newItem.y - curItem.y).toDouble()
+                        val angle = (atan2(dy, dx) * 180)/Math.PI
+
+                        newItem.copy(degree = angle)
+                    } else {
+                        newItem
+                    }
+                }.filterNotNull()
             }
-            if(time > 1f) time = 0f
+            if (time > 1f) time = 0f
         }
     }
+
 
     private suspend fun endRender() {
 
@@ -124,9 +137,12 @@ data class BezierPoint(
 data class Climber(
     val x: Int,
     val y: Int,
+    val width : Int,
+    val height : Int,
     val targetHill: Hill,
     val speed: Int,
-    val currentHillIndex : Int = 0
+    val degree: Double,
+    val currentHillIndex: Int = 0
 ) {
 
     /**
@@ -139,7 +155,7 @@ data class Climber(
         }
         val targetPoint = targetHill.points[currentHillIndex]
         val newPoint = targetPoint.getPointByFrame(time)
-        val newHillIndex = if(time >= 1f) currentHillIndex + 1 else currentHillIndex
+        val newHillIndex = if (time >= 1f) currentHillIndex + 1 else currentHillIndex
         return this.copy(x = newPoint.x, y = newPoint.y, currentHillIndex = newHillIndex)
     }
 
@@ -148,11 +164,23 @@ data class Climber(
             return Climber(
                 x = 0,
                 y = 0,
+                width = 100,
+                height = 100,
                 targetHill = targetHill,
-                speed = speed
+                speed = speed,
+                degree = 0.0
             )
         }
     }
 }
 
+private inline fun <T> doubleMap(list1: List<T?>, list2: List<T?>, block: (value1: T?, value2: T?) -> T?): List<T?> {
+    require(list1.size == list2.size)
+    val result = mutableListOf<T?>()
+
+    for (i in list1.indices) {
+        result.add(block(list1[i], list2[i]))
+    }
+    return result
+}
 

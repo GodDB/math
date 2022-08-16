@@ -8,17 +8,15 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.climbthehillanimation.ui.theme.ClimbTheHillAnimationTheme
 
@@ -70,13 +68,16 @@ private fun DrawScope.drawHills(hills: List<Hill>) {
     }
 }
 
-private fun DrawScope.drawClimber(climbers : List<Climber>) {
+private fun DrawScope.drawClimber(climbers: List<Climber>) {
     climbers.forEach {
-        drawRect(
-            color = Color.Green,
-            topLeft = Offset(it.x.toFloat(), it.y.toFloat()),
-            size = Size(50f, 50f)
-        )
+        val rect = Offset(it.x.toFloat(), it.y.toFloat())
+        rotate(it.degree.toFloat(), rect) {
+            drawRect(
+                color = Color.Green,
+                topLeft = rect,
+                size = Size(it.width.toFloat(), it.height.toFloat())
+            )
+        }
     }
 }
 
