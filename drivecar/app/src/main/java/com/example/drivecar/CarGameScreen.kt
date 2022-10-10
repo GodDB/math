@@ -21,7 +21,8 @@ fun CarGame(viewModel: MainViewModel) {
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        Car(carState = state)
+        CarContent(carState = state.car)
+        MonsterContent(monsters = state.monsters)
 
         CarGameZoyStick(
             modifier = Modifier
@@ -35,11 +36,10 @@ fun CarGame(viewModel: MainViewModel) {
 }
 
 @Composable
-private fun Car(
+private fun CarContent(
     carState: Car
 ) {
     Canvas(modifier = Modifier, onDraw = {
-
 
         // top
         drawLine(
@@ -86,6 +86,40 @@ private fun Car(
             end = carState.rightBottom.toOffset(),
             strokeWidth = 5f
         )
+
+        // front vision
+        drawLine(
+            color = Color.DarkGray,
+            start = Offset(carState.front.x.toFloat(), carState.front.y.toFloat()),
+            end = carState.frontVisionVector.toOffset()
+        )
+
+        // guide left vision
+        drawLine(
+            color = Color.DarkGray,
+            start = Offset(carState.front.x.toFloat(), carState.front.y.toFloat()),
+            end = Offset(carState.leftVisionPoint.x.toFloat(), carState.leftVisionPoint.y.toFloat())
+        )
+
+        // guide right vision
+        drawLine(
+            color = Color.DarkGray,
+            start = Offset(carState.front.x.toFloat(), carState.front.y.toFloat()),
+            end = Offset(carState.rightVisionPoint.x.toFloat(), carState.rightVisionPoint.y.toFloat())
+        )
+    })
+}
+
+@Composable
+private fun MonsterContent(monsters : List<Monster>) {
+    Canvas(modifier = Modifier, onDraw = {
+        monsters.forEach {
+            drawCircle(
+                color = it.color,
+                radius = 10f,
+                center = it.vector2D.toOffset()
+            )
+        }
     })
 }
 

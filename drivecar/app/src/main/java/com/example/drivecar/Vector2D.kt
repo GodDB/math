@@ -26,11 +26,23 @@ data class Vector2D(
         )
     }
 
+    fun minus(x : Double, y : Double) : Vector2D {
+        return this.copy(
+            x = x - this.x,
+            y = y - this.y
+        )
+    }
+
     operator fun times(scalar: Double): Vector2D {
         return this.copy(
             x = scalar * this.x,
             y = scalar * this.y
         )
+    }
+
+    //vector 내적
+     fun dotTimes(vector: Vector2D) : Double {
+        return this.x * vector.x + this.y * vector.y
     }
 
     // 원점 기준 (0, 0)기준으로 로테이션 되므로, 사용금지
@@ -56,6 +68,17 @@ data class Vector2D(
         )
     }
 
+    // 벡터 정규화 -> 단위벡터로 변환
+    // 벡터의 거리 스칼라를 각 x,y에 나눈다.
+    fun getUnitVector() : Vector2D {
+        val dist = getDistance()
+
+        return Vector2D(
+            x = x / dist,
+            y = y / dist
+        )
+    }
+
     fun addDistance(scalar: Double, radian: Double): Vector2D {
         return this.copy(
             x = this.x + (scalar * cos(radian)),
@@ -69,6 +92,11 @@ data class Vector2D(
 
     fun getRadian(): Double {
         return atan2(this.y, this.x)
+    }
+
+
+    companion object {
+        val ZERO : Vector2D = Vector2D(0.0, 0.0)
     }
 }
 
