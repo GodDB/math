@@ -30,7 +30,8 @@ fun CarGame(viewModel: MainViewModel) {
                 .align(Alignment.BottomCenter),
             onClickFront = viewModel::moveFront,
             onClickBack = viewModel::moveBack,
-            onClickRotate = viewModel::rotate
+            onClickRotate = viewModel::rotate,
+            onClickLeftTop = viewModel::moveLeftTop
         )
     }
 }
@@ -128,7 +129,8 @@ private fun CarGameZoyStick(
     modifier: Modifier,
     onClickFront: () -> Unit,
     onClickBack: () -> Unit,
-    onClickRotate: () -> Unit
+    onClickRotate: () -> Unit,
+    onClickLeftTop : () -> Unit
 ) {
     Column(modifier = modifier) {
         Button(onClick = onClickFront) {
@@ -139,6 +141,9 @@ private fun CarGameZoyStick(
         }
         Button(onClick = onClickRotate) {
             Text("회전")
+        }
+        Button(onClick = onClickLeftTop) {
+            Text(text = "좌상단 이동")
         }
     }
 }

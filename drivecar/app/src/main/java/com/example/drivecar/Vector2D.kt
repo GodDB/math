@@ -101,6 +101,20 @@ data class Vector2D(
         return atan2(this.y, this.x)
     }
 
+    fun max(other : Vector2D) : Vector2D {
+        return this.copy(
+            x = Math.max(this.x, other.x),
+            y = Math.max(this.y, other.y)
+        )
+    }
+
+    fun min(other : Vector2D) : Vector2D {
+        return this.copy(
+            x = Math.min(this.x, other.x),
+            y = Math.min(this.y, other.y)
+        )
+    }
+
 
     companion object {
         val ZERO : Vector2D = Vector2D(0.0, 0.0)

@@ -2,11 +2,15 @@ package com.example.drivecar
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.sin
 
 class MainViewModel : ViewModel() {
@@ -16,7 +20,7 @@ class MainViewModel : ViewModel() {
 
     fun rotate() {
         _state.update {
-            val newCar = it.car.rotate(5.0)
+            val newCar = it.car.relativeRotate(5.0)
             it.copy(
                 car = newCar,
                 monsters = it.monsters.map {
@@ -64,6 +68,26 @@ class MainViewModel : ViewModel() {
             )
         }
     }
+
+    fun moveLeftTop() {
+        viewModelScope.launch {
+            val targetVector = Vector2D.ZERO.plus(50.0, 50.0)
+            while (true) {
+                val curCenterVector = _state.value.car.center
+                if(curCenterVector == targetVector) break
+
+                // 초당 200px 속도로 이동한다.
+                // 60 프레임으로 애니메이션을 실행한다.
+                _state.update {
+                    val degree = Math.toDegrees((it.car.center - targetVector).getRadian())
+                    it.copy(
+                        car = it.car.move(200.0 / 60.0, degree, targetVector)
+                    )
+                }
+                delay(1_000L / 60L)
+            }
+        }
+    }
 }
 
 data class Game(
@@ -101,7 +125,7 @@ data class Car(
     val leftTop: Point = kotlin.run {
         val radian = Math.toRadians(degree)
         center
-            .plus(-50.0, -50.0)
+            .plus(-width / 2, -height / 2)
             .rotate(radian, center.x, center.y)
             .toPoint()
     }
@@ -109,7 +133,7 @@ data class Car(
     val rightTop: Point = kotlin.run {
         val radian = Math.toRadians(degree)
         center
-            .plus(50.0, -50.0)
+            .plus(width / 2, -height / 2)
             .rotate(radian, center.x, center.y)
             .toPoint()
     }
@@ -117,7 +141,7 @@ data class Car(
     val leftBottom: Point = kotlin.run {
         val radian = Math.toRadians(degree)
         center
-            .plus(-50.0, 50.0)
+            .plus(-width / 2, height / 2)
             .rotate(radian, center.x, center.y)
             .toPoint()
     }
@@ -125,7 +149,7 @@ data class Car(
     val rightBottom: Point = kotlin.run {
         val radian = Math.toRadians(degree)
         center
-            .plus(50.0, 50.0)
+            .plus(width / 2, height / 2)
             .rotate(radian, center.x, center.y)
             .toPoint()
     }
@@ -133,8 +157,8 @@ data class Car(
     val front: Point = kotlin.run {
         val radian = Math.toRadians(degree)
         Point(
-            center.x + (-50 * cos(radian)),
-            center.y + (-50 * sin(radian))
+            center.x + (-width / 2 * cos(radian)),
+            center.y + (-height / 2 * sin(radian))
         )
     }
 
@@ -168,7 +192,16 @@ data class Car(
         )
     }
 
-    fun rotate(relativeDegree: Double): Car {
+    fun move(scalar: Double, degree: Double, maxVector : Vector2D): Car {
+        val radian = Math.toRadians(degree)
+        return this.copy(
+            center = this.center
+                .addDistance(scalar, radian)
+                .max(maxVector)
+        )
+    }
+
+    fun relativeRotate(relativeDegree: Double): Car {
         return this.copy(
             degree = this.degree + relativeDegree,
         )
