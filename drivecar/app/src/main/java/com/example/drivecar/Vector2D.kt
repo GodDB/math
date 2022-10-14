@@ -19,6 +19,13 @@ data class Vector2D(
         )
     }
 
+    fun plus(x : Double, y : Double) : Vector2D {
+        return this.copy(
+            x = this.x + x,
+            y = this.y + y
+        )
+    }
+
     operator fun minus(vector: Vector2D): Vector2D {
         return this.copy(
             x = vector.x - this.x,
@@ -100,6 +107,14 @@ data class Vector2D(
     }
 }
 
+fun Point.toOffset(): Offset {
+    return Offset(this.x.toFloat(), this.y.toFloat())
+}
+
 fun Vector2D.toOffset(): Offset {
     return Offset(this.x.toFloat(), this.y.toFloat())
+}
+
+fun Vector2D.toPoint() : Point {
+    return Point(this.x, this.y)
 }

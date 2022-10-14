@@ -33,7 +33,7 @@ class MainViewModel : ViewModel() {
     fun moveFront() {
         val leftScalar = -100.0
         _state.update {
-            val newCar = it.car.moveFront(leftScalar)
+            val newCar = it.car.move(leftScalar)
             it.copy(
                 car = newCar,
                 monsters = it.monsters.map {
@@ -51,7 +51,7 @@ class MainViewModel : ViewModel() {
     fun moveBack() {
         val rightScalar = 100.0
         _state.update {
-            val newCar = it.car.moveBack(rightScalar)
+            val newCar = it.car.move(rightScalar)
             it.copy(
                 car = newCar,
                 monsters = it.monsters.map {
@@ -93,24 +93,41 @@ data class Monster(
 }
 
 data class Car(
-    val leftTop: Vector2D,
-    val rightTop: Vector2D,
-    val leftBottom: Vector2D,
-    val rightBottom: Vector2D,
-    val degree: Double
+    val center: Vector2D,
+    val degree: Double,
+    val width: Double,
+    val height: Double
 ) {
-    val center: Point = kotlin.run {
-        val xList = arrayOf(leftTop.x, rightTop.x, leftBottom.x, rightBottom.x)
-        val yList = arrayOf(leftTop.y, rightTop.y, leftBottom.y, rightBottom.y)
-        val minX = xList.minOrNull() ?: 0.0
-        val maxX = xList.maxOrNull() ?: 0.0
-        val minY = yList.minOrNull() ?: 0.0
-        val maxY = yList.maxOrNull() ?: 0.0
+    val leftTop: Point = kotlin.run {
+        val radian = Math.toRadians(degree)
+        center
+            .plus(-50.0, -50.0)
+            .rotate(radian, center.x, center.y)
+            .toPoint()
+    }
 
-        Point(
-            minX + (maxX - minX) / 2,
-            minY + (maxY - minY) / 2
-        )
+    val rightTop: Point = kotlin.run {
+        val radian = Math.toRadians(degree)
+        center
+            .plus(50.0, -50.0)
+            .rotate(radian, center.x, center.y)
+            .toPoint()
+    }
+
+    val leftBottom: Point = kotlin.run {
+        val radian = Math.toRadians(degree)
+        center
+            .plus(-50.0, 50.0)
+            .rotate(radian, center.x, center.y)
+            .toPoint()
+    }
+
+    val rightBottom: Point = kotlin.run {
+        val radian = Math.toRadians(degree)
+        center
+            .plus(50.0, 50.0)
+            .rotate(radian, center.x, center.y)
+            .toPoint()
     }
 
     val front: Point = kotlin.run {
@@ -144,34 +161,16 @@ data class Car(
         )
     }
 
-    fun moveFront(scalar: Double): Car {
+    fun move(scalar: Double): Car {
         val radian = Math.toRadians(degree)
         return this.copy(
-            leftTop = this.leftTop.addDistance(scalar, radian),
-            rightTop = this.rightTop.addDistance(scalar, radian),
-            leftBottom = this.leftBottom.addDistance(scalar, radian),
-            rightBottom = this.rightBottom.addDistance(scalar, radian)
+            center = this.center.addDistance(scalar, radian)
         )
     }
 
-    fun moveBack(scalar: Double): Car {
-        val radian = Math.toRadians(degree)
+    fun rotate(relativeDegree: Double): Car {
         return this.copy(
-            leftTop = this.leftTop.addDistance(scalar, radian),
-            rightTop = this.rightTop.addDistance(scalar, radian),
-            leftBottom = this.leftBottom.addDistance(scalar, radian),
-            rightBottom = this.rightBottom.addDistance(scalar, radian)
-        )
-    }
-
-    fun rotate(degree: Double): Car {
-        val radian = Math.toRadians(degree)
-        return this.copy(
-            leftTop = this.leftTop.rotate(radian, center.x, center.y),
-            rightTop = this.rightTop.rotate(radian, center.x, center.y),
-            leftBottom = this.leftBottom.rotate(radian, center.x, center.y),
-            rightBottom = this.rightBottom.rotate(radian, center.x, center.y),
-            degree = this.degree + degree,
+            degree = this.degree + relativeDegree,
         )
     }
 
@@ -189,11 +188,10 @@ data class Car(
 
     companion object {
         val DEFAULT: Car = Car(
-            leftTop = Vector2D(0.0, 0.0),
-            rightTop = Vector2D(100.0, 0.0),
-            leftBottom = Vector2D(0.0, 100.0),
-            rightBottom = Vector2D(100.0, 100.0),
-            degree = 0.0
+            center = Vector2D(50.0, 50.0),
+            degree = 0.0,
+            width = 100.0,
+            height = 100.0
         )
     }
 }
